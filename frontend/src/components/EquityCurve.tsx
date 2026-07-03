@@ -110,7 +110,12 @@ export const EquityCurve = () => {
                 border: '1px solid #1e2d45',
                 borderRadius: '8px',
               }}
-              formatter={(value: number) => [`$${value.toFixed(2)}`, 'Equity']}
+              formatter={(value: any) => {
+                if (typeof value === 'number') {
+                  return [`$${value.toFixed(2)}`, 'Equity'];
+                }
+                return ['$0.00', 'Equity'];
+              }}
               labelStyle={{ color: '#e8edf5' }}
             />
             <Area

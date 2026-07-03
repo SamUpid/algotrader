@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:8000';
+// Use the Render backend URL
+const API_BASE_URL = 'https://algotrader-api-7y55.onrender.com';
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,

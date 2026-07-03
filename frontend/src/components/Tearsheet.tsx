@@ -13,7 +13,6 @@ import { API } from '../api/client';
 import { MonthlyHeatmap } from './MonthlyHeatmap';
 
 interface TearsheetData {
-  equity: { date: string; value: number }[];
   drawdown: { date: string; value: number }[];
   metrics: any;
 }
@@ -34,10 +33,6 @@ export const Tearsheet = () => {
         const drawdownData = generateDrawdown(equityData.equity, equityData.dates);
 
         setData({
-          equity: equityData.dates.map((d: string, i: number) => ({
-            date: d,
-            value: equityData.equity[i],
-          })),
           drawdown: drawdownData,
           metrics: metrics,
         });
@@ -64,8 +59,8 @@ export const Tearsheet = () => {
   };
 
   const generateSampleData = () => {
-    const dates = [];
-    const equity = [];
+    const dates: string[] = [];
+    const equity: number[] = [];
     let e = 1000000;
     const today = new Date();
     for (let i = 252; i >= 0; i--) {
@@ -77,7 +72,6 @@ export const Tearsheet = () => {
     }
     const drawdown = generateDrawdown(equity, dates);
     return {
-      equity: dates.map((d, i) => ({ date: d, value: equity[i] })),
       drawdown: drawdown,
       metrics: {
         sharpe_ratio: 1.2,
@@ -108,11 +102,7 @@ export const Tearsheet = () => {
     );
   }
 
-  const { equity, drawdown, metrics } = data;
-  const lastEquity = equity.length > 0 ? equity[equity.length - 1]?.value : 0;
-  const minEquity = Math.min(...equity.map(d => d.value));
-  const maxEquity = Math.max(...equity.map(d => d.value));
-  const padding = (maxEquity - minEquity) * 0.1 || 10000;
+  const { drawdown, metrics } = data;
 
   return (
     <div className="space-y-6">
@@ -177,7 +167,12 @@ export const Tearsheet = () => {
                   border: '1px solid #1e2d45',
                   borderRadius: '8px',
                 }}
-                formatter={(value) => [`${Number(value ?? 0).toFixed(2)}%`, 'Drawdown']}
+                formatter={(value: any) => {
+                  if (typeof value === 'number') {
+                    return [`${value.toFixed(2)}%`, 'Drawdown'];
+                  }
+                  return ['0%', 'Drawdown'];
+                }}
                 labelStyle={{ color: '#e8edf5' }}
               />
               <ReferenceLine y={0} stroke="#00d4aa" strokeDasharray="5 5" />

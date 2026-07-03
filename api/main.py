@@ -27,8 +27,9 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:5173", 
         "http://localhost:5174",
-        # Add your Render frontend URL once deployed
-        # "https://your-frontend.vercel.app"
+        "https://algotrader.vercel.app",  # Vercel preview
+        "https://algotrader-git-main.vercel.app",
+        "https://algotrader-*.vercel.app",  # All preview deployments
     ],
     allow_methods=["*"],
     allow_headers=["*"],
