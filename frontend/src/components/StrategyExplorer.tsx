@@ -18,15 +18,26 @@ export const StrategyExplorer = () => {
       setLoading(true);
       try {
         const response = await API.signals.getMetricsForStrategy(selectedStrategy);
-        if (response.data.status === 'success') {
+        console.log(`Metrics for ${selectedStrategy}:`, response.data);
+        
+        if (response.data && response.data.status === 'success') {
           setMetrics(response.data.metrics);
+        } else if (response.data && response.data.metrics) {
+          // Fallback for old API format
+          setMetrics(response.data.metrics);
+        } else {
+          // If no data, try the default endpoint
+          const defaultResponse = await API.signals.getMetrics();
+          if (defaultResponse.data && defaultResponse.data.metrics) {
+            setMetrics(defaultResponse.data.metrics);
+          }
         }
       } catch (error) {
         console.error('Error fetching metrics:', error);
-        // Fallback to default metrics
+        // Try default endpoint as fallback
         try {
           const defaultResponse = await API.signals.getMetrics();
-          if (defaultResponse.data.status === 'success') {
+          if (defaultResponse.data && defaultResponse.data.metrics) {
             setMetrics(defaultResponse.data.metrics);
           }
         } catch (e) {
@@ -73,7 +84,7 @@ export const StrategyExplorer = () => {
         {SIGNAL_OPTIONS.find((s) => s.id === selectedStrategy)?.description}
       </p>
 
-      {metrics ? (
+      {metrics && metrics.sharpe_ratio !== undefined ? (
         <div className="grid grid-cols-2 gap-3">
           <div className="bg-[#0a0e17] rounded-lg p-3">
             <div className="text-xs text-gray-400">Sharpe</div>

@@ -24,7 +24,6 @@ export const RiskPanel = () => {
         if (response.data && response.data.var_95_1d !== undefined) {
           setRisk(response.data);
         } else {
-          // Use default values if API returns unexpected format
           setRisk({
             var_95_1d: 1.22,
             current_drawdown: -0.5,
@@ -36,7 +35,6 @@ export const RiskPanel = () => {
         }
       } catch (error) {
         console.error('Error fetching risk:', error);
-        // Use default values on error
         setRisk({
           var_95_1d: 1.22,
           current_drawdown: -0.5,
@@ -126,7 +124,6 @@ export const RiskPanel = () => {
         })}
       </div>
 
-      {/* Drawdown progress bar */}
       <div className="mt-4">
         <div className="flex justify-between text-xs text-gray-400 mb-1">
           <span>Drawdown</span>
