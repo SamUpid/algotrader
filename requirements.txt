@@ -18,3 +18,4 @@ httpx
 python-multipart
 joblib
 requests
+pyarrow>=15.0.0
