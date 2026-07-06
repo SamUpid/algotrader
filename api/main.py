@@ -2,6 +2,8 @@
 api/main.py
 FastAPI application entry point.
 """
+import os
+import base64
 import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -27,9 +29,9 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:5173", 
         "http://localhost:5174",
-        "https://algotrader.vercel.app",  # Vercel preview
+        "https://algotrader.vercel.app",
         "https://algotrader-git-main.vercel.app",
-        "https://algotrader-*.vercel.app",  # All preview deployments
+        "https://algotrader-*.vercel.app",
     ],
     allow_methods=["*"],
     allow_headers=["*"],
@@ -48,13 +50,32 @@ async def root():
 
 @app.on_event("startup")
 async def startup_event():
-    """Start the scheduler on application startup."""
+    """
+    Run on application startup:
+    1. Load trade ledger from environment variable (if available)
+    2. Start the scheduler
+    """
+    # Step 1: Load trade ledger from environment variable
+    encoded = os.getenv("TRADE_LEDGER_BASE64")
+    if encoded:
+        try:
+            decoded = base64.b64decode(encoded).decode('utf-8')
+            os.makedirs("data/processed", exist_ok=True)
+            with open("data/processed/trade_ledger.csv", "w") as f:
+                f.write(decoded)
+            logger.info("✅ Trade ledger loaded from environment")
+        except Exception as e:
+            logger.error(f"❌ Failed to load trade ledger: {e}")
+    else:
+        logger.info("ℹ️ No TRADE_LEDGER_BASE64 environment variable found")
+    
+    # Step 2: Start scheduler
     start_scheduler()
-    logger.info("Application started with scheduler")
+    logger.info("✅ Application started with scheduler")
 
 
 @app.on_event("shutdown")
 async def shutdown_event():
     """Stop the scheduler on application shutdown."""
     stop_scheduler()
-    logger.info("Application shutting down")
+    logger.info("🔴 Application shutting down")
