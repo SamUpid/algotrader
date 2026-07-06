@@ -96,7 +96,7 @@ async def get_equity_curve(
     """
     ledger_path = config.DATA_PROC_DIR / "trade_ledger.csv"
     
-    # Generate synthetic equity curve if no trades exist
+    # If no trade ledger, generate sample data
     if not ledger_path.exists():
         return generate_sample_equity(days)
 
@@ -112,7 +112,7 @@ async def get_equity_curve(
     daily_pnl = df.groupby('date')['pnl'].sum()
 
     # If only one day of data, generate sample curve
-    if len(daily_pnl) < 10:
+    if len(daily_pnl) < 5:
         logger.warning("Not enough trade data for equity curve. Using sample data.")
         return generate_sample_equity(days)
 
@@ -130,7 +130,7 @@ async def get_equity_curve(
     return {
         'dates': [d.strftime('%Y-%m-%d') for d in equity.index],
         'equity': [round(float(e), 2) for e in equity.tolist()],
-        'returns': [round(float(r), 4) for r in equity.pct_change().fillna(0).tolist()]
+        'returns': [round(float(r), 6) for r in equity.pct_change().fillna(0).tolist()]
     }
 
 
