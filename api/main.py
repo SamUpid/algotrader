@@ -32,6 +32,8 @@ app.add_middleware(
         "https://algotrader.vercel.app",
         "https://algotrader-git-main.vercel.app",
         "https://algotrader-*.vercel.app",
+        "https://frontend-two-phi-84.vercel.app",
+        "https://*.vercel.app",
     ],
     allow_methods=["*"],
     allow_headers=["*"],
