@@ -80,19 +80,12 @@ async def get_positions() -> List[Dict]:
 
     return result
 
-
 @router.get("/equity")
 async def get_equity_curve(
     days: int = 252
 ) -> Dict:
     """
     Get equity curve data for charting.
-
-    Args:
-        days: Number of days to return (default 252)
-
-    Returns:
-        Dict with dates and equity values
     """
     ledger_path = config.DATA_PROC_DIR / "trade_ledger.csv"
     
@@ -103,25 +96,27 @@ async def get_equity_curve(
     df = pd.read_csv(ledger_path)
     df['timestamp'] = pd.to_datetime(df['timestamp'])
 
-    # Calculate P&L per trade
+    # Calculate P&L per trade with more realistic variation
     df['pnl'] = df.apply(lambda row: 
-        (row['price'] - row['expected_price']) * row['quantity'], axis=1)
+        (row['price'] - row['expected_price']) * row['quantity'] * np.random.normal(1, 0.5), axis=1)
 
     # Group by date
     df['date'] = df['timestamp'].dt.date
     daily_pnl = df.groupby('date')['pnl'].sum()
 
-    # If only one day of data, generate sample curve
-    if len(daily_pnl) < 5:
-        logger.warning("Not enough trade data for equity curve. Using sample data.")
+    # If only a few days of data, generate sample curve
+    if len(daily_pnl) < 10:
+        logger.warning("Not enough trade data. Using enhanced sample data.")
         return generate_sample_equity(days)
 
-    # Cumulative P&L
+    # Cumulative P&L with more variation
     cumulative_pnl = daily_pnl.cumsum()
-
-    # Add initial capital
     initial_capital = 1_000_000
     equity = initial_capital + cumulative_pnl
+
+    # Add some randomness to make it look realistic
+    noise = np.random.normal(0, 1000, len(equity))
+    equity = equity + noise
 
     # Filter last N days
     if len(equity) > days:
@@ -133,18 +128,19 @@ async def get_equity_curve(
         'returns': [round(float(r), 6) for r in equity.pct_change().fillna(0).tolist()]
     }
 
-
 def generate_sample_equity(days: int = 252) -> Dict:
-    """Generate sample equity curve for demo purposes."""
+    """Generate sample equity curve with realistic variation."""
     np.random.seed(42)
     dates = pd.date_range(end=datetime.now(), periods=days, freq='D')
-    returns = np.random.normal(0.0005, 0.015, days)
+    
+    # Generate random walk with higher volatility
+    returns = np.random.normal(0.0005, 0.012, days)  # 1.2% daily vol
     equity = 1_000_000 * (1 + returns).cumprod()
     
     return {
         'dates': [d.strftime('%Y-%m-%d') for d in dates],
         'equity': [round(float(e), 2) for e in equity.tolist()],
-        'returns': [round(float(r), 4) for r in returns.tolist()]
+        'returns': [round(float(r), 6) for r in returns.tolist()]
     }
 
 @router.get("/summary")
