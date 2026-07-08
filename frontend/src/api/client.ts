@@ -1,11 +1,10 @@
 import axios from 'axios';
 
-// Use the Render backend URL
 const API_BASE_URL = 'https://algotrader-api-7y55.onrender.com';
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 10000,
+  timeout: 15000,
   headers: {
     'Content-Type': 'application/json',
   },

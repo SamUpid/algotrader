@@ -148,40 +148,55 @@ async def get_portfolio_summary() -> Dict:
     """
     Get portfolio summary with NAV, P&L, and risk metrics.
     """
-    positions = await get_positions()
-    
-    if not positions:
+    try:
+        # Get positions
+        positions = await get_positions()
+        
+        if not positions:
+            return {
+                'nav': 1_000_000,
+                'unrealized_pnl': 0,
+                'realized_pnl': 0,
+                'total_pnl': 0,
+                'positions_count': 0,
+                'last_updated': datetime.now().isoformat()
+            }
+
+        total_value = sum(p['quantity'] * p['current_price'] for p in positions)
+        total_cost = sum(p['quantity'] * p['entry_price'] for p in positions)
+        unrealized_pnl = total_value - total_cost
+
+        # Calculate realized PnL from ledger
+        ledger_path = config.DATA_PROC_DIR / "trade_ledger.csv"
+        realized_pnl = 0
+        if ledger_path.exists():
+            df = pd.read_csv(ledger_path)
+            df['pnl'] = df.apply(lambda row: 
+                (row['price'] - row['expected_price']) * row['quantity'] if row['side'] == 'BUY'
+                else (row['expected_price'] - row['price']) * row['quantity'], axis=1)
+            realized_pnl = df['pnl'].sum()
+
+        return {
+            'nav': round(total_value, 2),
+            'unrealized_pnl': round(unrealized_pnl, 2),
+            'realized_pnl': round(realized_pnl, 2),
+            'total_pnl': round(unrealized_pnl + realized_pnl, 2),
+            'positions_count': len(positions),
+            'last_updated': datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Error in /summary: {e}")
         return {
             'nav': 1_000_000,
             'unrealized_pnl': 0,
             'realized_pnl': 0,
             'total_pnl': 0,
             'positions_count': 0,
-            'last_updated': datetime.now().isoformat()
+            'last_updated': datetime.now().isoformat(),
+            'error': str(e)
         }
-
-    total_value = sum(p['quantity'] * p['current_price'] for p in positions)
-    total_cost = sum(p['quantity'] * p['entry_price'] for p in positions)
-    unrealized_pnl = total_value - total_cost
-
-    # Calculate realized PnL from ledger
-    ledger_path = config.DATA_PROC_DIR / "trade_ledger.csv"
-    realized_pnl = 0
-    if ledger_path.exists():
-        df = pd.read_csv(ledger_path)
-        df['pnl'] = df.apply(lambda row: 
-            (row['price'] - row['expected_price']) * row['quantity'] if row['side'] == 'BUY'
-            else (row['expected_price'] - row['price']) * row['quantity'], axis=1)
-        realized_pnl = df['pnl'].sum()
-
-    return {
-        'nav': round(total_value, 2),
-        'unrealized_pnl': round(unrealized_pnl, 2),
-        'realized_pnl': round(realized_pnl, 2),
-        'total_pnl': round(unrealized_pnl + realized_pnl, 2),
-        'positions_count': len(positions),
-        'last_updated': datetime.now().isoformat()
-    }
+    
 
 @router.get("/risk")
 async def get_portfolio_risk() -> Dict:

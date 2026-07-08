@@ -3,6 +3,7 @@ import { EquityCurve } from './components/EquityCurve';
 import { RiskPanel } from './components/RiskPanel';
 import { Tearsheet } from './components/Tearsheet';
 import { StrategyExplorer } from './components/StrategyExplorer';
+import { MetricStrip } from './components/MetricStrip';
 
 function App() {
   return (
@@ -21,6 +22,9 @@ function App() {
             </div>
           </div>
         </div>
+
+        {/* ⭐ NEW: Metric Strip */}
+        <MetricStrip />
 
         {/* Main Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
